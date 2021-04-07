@@ -1,9 +1,10 @@
 .pokemon_card {
     display: flex;
     border-radius: 20px;
-    box-shadow: 0 3px 15px rgba(100, 100, 100, 0.5);
-    margin-top: 1em;
+    box-shadow: 0 3px 15px #111;
+    margin: 1em;
     padding: 1em;
+    width: 400px;
 }
 
 .pokemon_card .info {
@@ -39,17 +40,14 @@
     flex-grow: 4;
 }
 
-.pokemon_card .info .basic_info .sprite_and_name .sprite_container {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
+.pokemon_card .info .basic_info .sprite_and_name .sprite_container img {
+    margin-top: -0.5em;
 }
 
 .pokemon_card .info .basic_info .name {
     font-size: 20px;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
-    margin-left: 0.5em;
 }
 
 .pokemon_card .info .basic_info .number {

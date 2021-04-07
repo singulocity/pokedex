@@ -12,14 +12,17 @@
     <title>Pokedex</title>
 </head>
 <body>
-    <div id="search_container">
-        <input id="search_bar" type="search" placeholder="Search..." onkeyup="searchPokemon()">
-        <span id="search_error"></span>
+    <div id="search_and_generation">
+        <div id="search_container">
+            <input id="search_bar" type="search" placeholder="Search..." onkeyup="searchPokemon()">
+            <span id="search_error"></span>
+        </div>
+        
+        <div id="generation_container"></div>
     </div>
 
     <div id="pokemon_container"></div>
 
     <script src="index.js"></script>
-
 </body>
 </html>

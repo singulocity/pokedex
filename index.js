@@ -1,9 +1,63 @@
 const pokemon_container = document.getElementById('pokemon_container');
 const search_bar = document.getElementById('search_bar');
 const search_error = document.getElementById('search_error');
+const generation_container = document.getElementById('generation_container');
 
 let timeout = null;
-let next = "";
+//let next = '';
+let locked_for_loading = false;
+let generations = null;
+
+//window.addEventListener('scroll', function() {
+//    if (locked_for_loading == false && window.scrollY >= window.scrollMaxY * 0.9) {
+//        getAllPokemon(next);
+//    }
+//});
+
+const changeGeneration = async (url) => {
+    search_bar.value = '';
+
+    try {
+        const result = await fetch(url);
+
+        if (result.ok) {
+            const generation = await result.json();
+
+            const limit = generation.pokemon_species.length;
+            const offset = generation.pokemon_species[0].url.slice(-4, -1) - 1;
+
+            pokemon_container.innerHTML = '';
+            search_error.textContent = '';
+
+            getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
+        }
+    } catch(e) {
+        search_error.textContent = e;
+    }
+}
+
+const getGenerations = async (url) => {
+    try {
+        const result = await fetch(url);
+
+        if (result.ok) {
+            generations = await result.json();
+
+            for (let number = 0; number < generations.count; number++) {
+                const generation_button = document.createElement('div');
+                generation_button.classList.add('generation_button_container');
+
+                generation_button.innerHTML = `
+                    <button type="button" onclick="changeGeneration('${generations.results[number].url}')">${number + 1}</button>
+                `;
+                
+                generation_container.appendChild(generation_button);
+            }
+        }
+    } catch(e) {
+        search_error.textContent = e;
+    }
+}
 
 // These are all the colors I use for the background of each pokemon card
 const type_colors = {
@@ -27,9 +81,9 @@ const type_colors = {
     fairy:'#f0b6bc'
 }
 
-// Uses the pokeAPI to get a limited amount within an offset (like a page)
-const getAllPokemon = async (limit, offset) => {
-    const url = `https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`;
+// Uses the pokeAPI to get a limited amount within an offset
+const getAllPokemon = async (url) => {
+    locked_for_loading = true;
 
     try {
         const result = await fetch(url);
@@ -46,12 +100,17 @@ const getAllPokemon = async (limit, offset) => {
             search_error.textContent = `No results found for ${id}...`;
         }
     } catch(e) {
+        error_shake();
         search_error.textContent = e;
     }
+
+    locked_for_loading = false;
 }
 
 // Uses the pokeAPI to get the Pokemon
 const getPokemon = async (id) => {
+    locked_for_loading = true;
+
     const url = `https://pokeapi.co/api/v2/pokemon/${id}`;
 
     try {
@@ -65,17 +124,20 @@ const getPokemon = async (id) => {
             search_error.textContent = `No results found for ${id}...`;
         }
     } catch(e) {
+        error_shake();
         search_error.textContent = e;
     }
+
+    locked_for_loading = false;
 
     return Promise.resolve();
 }
 
 // Shake the search bar when the search fails
 function error_shake() {
-    search_bar.setAttribute("class", "error_shake")
+    search_bar.setAttribute('class', 'error_shake')
     setTimeout(function() {
-        search_bar.setAttribute("class", "");
+        search_bar.setAttribute('class', '');
     }, 500);
 }
 
@@ -83,16 +145,16 @@ function error_shake() {
 // then searches for the Pokemon
 const searchPokemon = async () => {
     clearTimeout(timeout);
-
-    pokemon_container.innerHTML = "";
-    search_error.textContent = "";
+    //next = '';
+    pokemon_container.innerHTML = '';
+    search_error.textContent = '';
 
     timeout = setTimeout(function() {
         const search_value = search_bar.value.toLowerCase();
-        if (search_value != "") {
+        if (search_value != '') {
             getPokemon(search_value)
         } else {
-            getAllPokemon(10, 0);
+            getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
         }
     }, 1000);
 }
@@ -103,7 +165,7 @@ function createPokemonCard(pokemon) {
     
     const types = pokemon.types.map(element => element.type.name);
     pokemon_card.style = `background:${type_colors[types[0]]}`;
-    let type_innerHTML = `<span class="type">${types[0].toUpperCase()}</span>`;
+    let type_innerHTML = `<span class='type'>${types[0].toUpperCase()}</span>`;
 
     if (types.length > 1) {
         pokemon_card.style = `background: -webkit-linear-gradient(
@@ -114,29 +176,42 @@ function createPokemonCard(pokemon) {
             to right,
             ${type_colors[types[0]]},
             ${type_colors[types[1]]})`;
-        type_innerHTML += `<span class="type">${types[1].toUpperCase()}</span>`;
+        type_innerHTML += `<span class='type'>${types[1].toUpperCase()}</span>`;
     }
 
-    const name = pokemon.name[0].toUpperCase() + pokemon.name.slice(1);
+    let female_index = pokemon.species.name.search('-f')
+    let male_index = pokemon.species.name.search('-m')
+    let name = '';
+    
+    // Very special case for the Nidoran family
+    if (female_index != -1 || male_index != -1) {
+        if (female_index != -1) {
+            name = pokemon.species.name[0].toUpperCase() + pokemon.species.name.slice(1, -2) + '♀';
+        } else {
+            name = pokemon.species.name[0].toUpperCase() + pokemon.species.name.slice(1, -2) + '♂';
+        }
+    } else {
+        name = pokemon.species.name[0].toUpperCase() + pokemon.species.name.slice(1);
+    }
 
     const pokemon_innerHTML = `
-        <div class="info">
-            <div class="basic_info">
-                <span class="number">#${("000" + pokemon.id).slice (-3)}</span>
-                <div class="sprite_and_name">
-                    <div class="sprite_container">
-                        <img class="sprite" src="${pokemon['sprites']['versions']['generation-vii']['icons']['front_default']}">
+        <div class='info'>
+            <div class='basic_info'>
+                <span class='number'>#${('000' + pokemon.id).slice (-3)}</span>
+                <div class='sprite_and_name'>
+                    <div class='sprite_container'>
+                        <img class='sprite' src='${pokemon['sprites']['versions']['generation-viii']['icons']['front_default']}'>
                     </div>
-                    <h3 class="name">${name}</h3>
+                    <h3 class='name'>${name}</h3>
                 </div>
             </div>
-            <div class="types">
+            <div class='types'>
                 ${type_innerHTML}
             </div>
         </div>
 
-        <div class="img-container">
-            <img src="${pokemon['sprites']['other']['official-artwork']['front_default']}">
+        <div class='img-container'>
+            <img src='${pokemon['sprites']['other']['official-artwork']['front_default']}'>
         </div>
     `;
 
@@ -145,5 +220,8 @@ function createPokemonCard(pokemon) {
     pokemon_container.appendChild(pokemon_card)
 }
 
-// Start by showing the first 10 Pokemon
-getAllPokemon(10, 0);
+// Get the generations
+getGenerations('https://pokeapi.co/api/v2/generation/');
+
+// Get the first generation
+getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=151&offset=0`);
