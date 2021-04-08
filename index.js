@@ -4,15 +4,8 @@ const search_error = document.getElementById('search_error');
 const generation_container = document.getElementById('generation_container');
 
 let timeout = null;
-//let next = '';
 let locked_for_loading = false;
 let generations = null;
-
-//window.addEventListener('scroll', function() {
-//    if (locked_for_loading == false && window.scrollY >= window.scrollMaxY * 0.9) {
-//        getAllPokemon(next);
-//    }
-//});
 
 const changeGeneration = async (url) => {
     search_bar.value = '';
@@ -48,8 +41,7 @@ const getGenerations = async (url) => {
                 generation_button.classList.add('generation_button_container');
 
                 generation_button.innerHTML = `
-                    <button type="button" onclick="changeGeneration('${generations.results[number].url}')">${number + 1}</button>
-                `;
+                    <button type="button" onclick="changeGeneration('${generations.results[number].url}')">${number + 1}</button>`;
                 
                 generation_container.appendChild(generation_button);
             }
@@ -145,7 +137,7 @@ function error_shake() {
 // then searches for the Pokemon
 const searchPokemon = async () => {
     clearTimeout(timeout);
-    //next = '';
+
     pokemon_container.innerHTML = '';
     search_error.textContent = '';
 
@@ -179,12 +171,13 @@ function createPokemonCard(pokemon) {
         type_innerHTML += `<span class='type'>${types[1].toUpperCase()}</span>`;
     }
 
-    let female_index = pokemon.species.name.search('-f')
-    let male_index = pokemon.species.name.search('-m')
+    const female_index = pokemon.species.name.search('-f')
+    const male_index = pokemon.species.name.search('-m')
     let name = '';
     
     // Very special case for the Nidoran family
     if (female_index != -1 || male_index != -1) {
+        // Went for species name instead of pokemon.name because some Pokémon have difficult names to account for (eg #386)
         if (female_index != -1) {
             name = pokemon.species.name[0].toUpperCase() + pokemon.species.name.slice(1, -2) + '♀';
         } else {
@@ -194,13 +187,22 @@ function createPokemonCard(pokemon) {
         name = pokemon.species.name[0].toUpperCase() + pokemon.species.name.slice(1);
     }
 
+    let sprite = pokemon['sprites']['versions']['generation-viii']['icons']['front_default'];
+
+    // Some Pokemon do not have a generation 8 sprite, replace with the ten questions pokemon
+    if (sprite == null) {
+        sprite = `images/unknown.png`;
+    }
+
     const pokemon_innerHTML = `
         <div class='info'>
             <div class='basic_info'>
                 <span class='number'>#${('000' + pokemon.id).slice (-3)}</span>
                 <div class='sprite_and_name'>
                     <div class='sprite_container'>
-                        <img class='sprite' src='${pokemon['sprites']['versions']['generation-viii']['icons']['front_default']}'>
+                        <img class='sprite' src='
+                            ${sprite}
+                        '>
                     </div>
                     <h3 class='name'>${name}</h3>
                 </div>
@@ -215,10 +217,13 @@ function createPokemonCard(pokemon) {
         </div>
     `;
 
-    pokemon_card.innerHTML = pokemon_innerHTML;
+        pokemon_card.innerHTML = pokemon_innerHTML;
 
-    pokemon_container.appendChild(pokemon_card)
+        pokemon_container.appendChild(pokemon_card)
 }
+
+// Clear the search bar from previous visits
+search_bar.value = '';
 
 // Get the generations
 getGenerations('https://pokeapi.co/api/v2/generation/');

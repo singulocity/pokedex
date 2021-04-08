@@ -2,8 +2,8 @@
     display: flex;
     border-radius: 20px;
     box-shadow: 0 3px 15px #111;
-    margin: 1em;
     padding: 1em;
+    margin: 1em;
     width: 400px;
 }
 
@@ -19,25 +19,30 @@
 }
 
 .pokemon_card .info .types .type {
+    flex-grow: 1;
+    margin: 0 0.5em;
+
+    border: 2px solid #00000099;
+    border-radius: 20px;
+
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
     font-size: 15px;
-    border: 2px solid #00000099;
-    border-radius: 20px;
-    flex-grow: 1;
     text-align: center;
-    margin: 0 0.5em;
 }
 
 .pokemon_card .info .basic_info {
     display:flex;
     align-items: center;
     flex-grow: 1;
+    align-items: flex-end;
+    padding-bottom: 1em;
 }
 
 .pokemon_card .info .basic_info .sprite_and_name {
     display: flex;
-    flex-grow: 4;
+    flex-direction: row;
+    flex-grow: 1;
 }
 
 .pokemon_card .info .basic_info .sprite_and_name .sprite_container img {
@@ -48,17 +53,17 @@
     font-size: 20px;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
+    margin: auto 0 0 0;
 }
 
 .pokemon_card .info .basic_info .number {
-    flex-grow: 1;
-    font-size: 20px;
+    font-size: 15px;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
 }
 
 .pokemon_card .img-container {
-    max-width: 6em;
+    width: 6em;
     height: auto;
     display: flex;
     flex-direction: column;
