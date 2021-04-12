@@ -4,12 +4,31 @@ const search_error = document.getElementById('search_error');
 const generation_container = document.getElementById('generation_container');
 
 let timeout = null;
-let locked_for_loading = false;
 let generations = null;
+let current_generation = 1;
 
-const changeGeneration = async (url) => {
+const changeGeneration = async (url, new_generation, button_id) => {
+    current_generation = new_generation;
+
+    // Clear disabled from each generation button
+    const children = Array.from(generation_container.children);
+    children.forEach(child => {
+        const button = Array.from(child.children)[0];
+
+        if (button.id == button_id) {
+            // Disable the active generation button
+            button.disabled = true;
+            button.style.color = '#fff';
+            button.style.cursor = 'default';
+        } else {
+            // Enable the others
+            button.disabled = false;
+            button.style.color = '#999';
+            button.style.cursor = 'pointer';
+        }
+    });
+
     search_bar.value = '';
-
     try {
         const result = await fetch(url);
 
@@ -22,13 +41,12 @@ const changeGeneration = async (url) => {
             pokemon_container.innerHTML = '';
             search_error.textContent = '';
 
-            getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
+            getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`, current_generation);
         }
     } catch(e) {
-        search_error.textContent = e;
+        errorShake(e);
     }
 }
-
 const getGenerations = async (url) => {
     try {
         const result = await fetch(url);
@@ -41,13 +59,20 @@ const getGenerations = async (url) => {
                 generation_button.classList.add('generation_button_container');
 
                 generation_button.innerHTML = `
-                    <button type="button" onclick="changeGeneration('${generations.results[number].url}')">${number + 1}</button>`;
+                    <button type="button" id="generation_button_${number + 1}" onclick="changeGeneration('${generations.results[number].url}', ${number + 1}, 'generation_button_${number + 1}')">${number + 1}</button>`;
                 
+                if ((number + 1) == 1) {
+                    const button = Array.from(generation_button.children)[0];
+                    button.disabled = true;
+                    button.style.color = '#fff';
+                    button.style.cursor = 'default';
+                }
+
                 generation_container.appendChild(generation_button);
             }
         }
     } catch(e) {
-        search_error.textContent = e;
+        errorShake(e);
     }
 }
 
@@ -74,35 +99,33 @@ const type_colors = {
 }
 
 // Uses the pokeAPI to get a limited amount within an offset
-const getAllPokemon = async (url) => {
-    locked_for_loading = true;
-
+const getAllPokemon = async (url, generation) => {
     try {
         const result = await fetch(url);
 
         if (result.ok) {
             const pokemon = await result.json();
-            next = pokemon.next;
             
-            for (let id = 0; id < pokemon.results.length; id++) {
-                await getPokemon(pokemon.results[id].name);
-            }
+            const all_pokemon = pokemon.results.map((a_pokemon) => {
+                return getPokemon(a_pokemon.name);
+            });
+            promises = await Promise.all(all_pokemon);
+
+            promises.forEach(pokemon => {
+                if (current_generation == generation) {
+                    createPokemonCard(pokemon);
+                }
+            });
         } else {
-            error_shake();
-            search_error.textContent = `No results found for ${id}...`;
+            errorShake(`No results found for ${id}...`);
         }
     } catch(e) {
-        error_shake();
-        search_error.textContent = e;
+        errorShake(e);
     }
-
-    locked_for_loading = false;
 }
 
-// Uses the pokeAPI to get the Pokemon
-const getPokemon = async (id) => {
-    locked_for_loading = true;
-
+// Uses the pokeAPI to get a Pokemon
+getPokemon = async (id) => {
     const url = `https://pokeapi.co/api/v2/pokemon/${id}`;
 
     try {
@@ -110,23 +133,21 @@ const getPokemon = async (id) => {
 
         if (result.ok) {
             const pokemon = await result.json();
-            createPokemonCard(pokemon);
+            return Promise.resolve(pokemon);
         } else {
-            error_shake();
-            search_error.textContent = `No results found for ${id}...`;
+            errorShake(`No results found for ${id}...`);
+            return Promise.error();
         }
     } catch(e) {
-        error_shake();
-        search_error.textContent = e;
+        errorShake(e);
+        return Promise.error();
     }
-
-    locked_for_loading = false;
-
-    return Promise.resolve();
 }
 
-// Shake the search bar when the search fails
-function error_shake() {
+// Shake the search bar when the search fails and show error message
+function errorShake(error_text) {
+    search_error.textContent = error_text;
+
     search_bar.setAttribute('class', 'error_shake')
     setTimeout(function() {
         search_bar.setAttribute('class', '');
@@ -144,7 +165,9 @@ const searchPokemon = async () => {
     timeout = setTimeout(function() {
         const search_value = search_bar.value.toLowerCase();
         if (search_value != '') {
-            getPokemon(search_value)
+            getPokemon(search_value).then((pokemon) => {
+                createPokemonCard(pokemon);
+            });
         } else {
             getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
         }
@@ -219,7 +242,7 @@ function createPokemonCard(pokemon) {
 
         pokemon_card.innerHTML = pokemon_innerHTML;
 
-        pokemon_container.appendChild(pokemon_card)
+        pokemon_container.appendChild(pokemon_card);
 }
 
 // Clear the search bar from previous visits
@@ -229,4 +252,4 @@ search_bar.value = '';
 getGenerations('https://pokeapi.co/api/v2/generation/');
 
 // Get the first generation
-getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=151&offset=0`);
+getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=151&offset=0`, 1);
