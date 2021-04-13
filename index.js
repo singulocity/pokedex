@@ -2,10 +2,16 @@ const pokemon_container = document.getElementById('pokemon_container');
 const search_bar = document.getElementById('search_bar');
 const search_error = document.getElementById('search_error');
 const generation_container = document.getElementById('generation_container');
+const pokedex_name = document.getElementById('pokedex_name');
+// In milliseconds
+const card_anim_speed = 1000;
 
 let timeout = null;
 let generations = null;
+// Helps keep track of the current gen for the buttons
 let current_generation = 1;
+// Used for staggering the animation
+let number = 0;
 
 const changeGeneration = async (url, new_generation, button_id) => {
     current_generation = new_generation;
@@ -37,7 +43,9 @@ const changeGeneration = async (url, new_generation, button_id) => {
 
             const limit = generation.pokemon_species.length;
             const offset = generation.pokemon_species[0].url.slice(-4, -1) - 1;
-
+            const name = generation.main_region.name[0].toUpperCase() + generation.main_region.name.slice(1);
+            
+            pokedex_name.innerHTML = `${name} Pokédex`;
             pokemon_container.innerHTML = '';
             search_error.textContent = '';
 
@@ -111,6 +119,8 @@ const getAllPokemon = async (url, generation) => {
             });
             promises = await Promise.all(all_pokemon);
 
+            number = 0;
+
             promises.forEach(pokemon => {
                 if (current_generation == generation) {
                     createPokemonCard(pokemon);
@@ -148,9 +158,9 @@ getPokemon = async (id) => {
 function errorShake(error_text) {
     search_error.textContent = error_text;
 
-    search_bar.setAttribute('class', 'error_shake')
+    search_bar.classList.add('error_shake');
     setTimeout(function() {
-        search_bar.setAttribute('class', '');
+        search_bar.classList.remove('error_shake');
     }, 500);
 }
 
@@ -171,7 +181,7 @@ const searchPokemon = async () => {
         } else {
             getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
         }
-    }, 1000);
+    }, card_anim_speed);
 }
 
 function createPokemonCard(pokemon) {
@@ -179,18 +189,8 @@ function createPokemonCard(pokemon) {
     pokemon_card.classList.add('pokemon_card');
     
     const types = pokemon.types.map(element => element.type.name);
-    pokemon_card.style = `background:${type_colors[types[0]]}`;
     let type_innerHTML = `<span class='type'>${types[0].toUpperCase()}</span>`;
-
     if (types.length > 1) {
-        pokemon_card.style = `background: -webkit-linear-gradient(
-            to right,
-            ${type_colors[types[0]]},
-            ${type_colors[types[1]]})`;
-        pokemon_card.style = `background: linear-gradient(
-            to right,
-            ${type_colors[types[0]]},
-            ${type_colors[types[1]]})`;
         type_innerHTML += `<span class='type'>${types[1].toUpperCase()}</span>`;
     }
 
@@ -217,32 +217,98 @@ function createPokemonCard(pokemon) {
         sprite = `images/unknown.png`;
     }
 
+    let stats_innerHTML = `
+    <div class='stats'>
+        <span class='stat'>
+            HP: ${pokemon['stats'][0].base_stat}
+        </span>
+        <span class='stat'>
+            ATK: ${pokemon['stats'][1].base_stat}
+        </span>
+        <span class='stat'>
+            DEF: ${pokemon['stats'][2].base_stat}
+        </span>
+        <span class='stat'>
+            SP. ATK: ${pokemon['stats'][3].base_stat}
+        </span>
+        <span class='stat'>
+            SP. DEF: ${pokemon['stats'][4].base_stat}
+        </span>
+        <span class='stat'>
+            SPEED: ${pokemon['stats'][5].base_stat}
+        </span>
+    </div>
+    `;
+
     const pokemon_innerHTML = `
-        <div class='info'>
-            <div class='basic_info'>
-                <span class='number'>#${('000' + pokemon.id).slice (-3)}</span>
-                <div class='sprite_and_name'>
-                    <div class='sprite_container'>
-                        <img class='sprite' src='
-                            ${sprite}
-                        '>
+        <div class='pokemon_card_inner'>
+            <div class='pokemon_card_front'>
+                <div class='info'>
+                    <div class='basic_info'>
+                        <span class='number'>#${('000' + pokemon.id).slice (-3)}</span>
+                        <div class='sprite_and_name'>
+                            <div class='sprite_container'>
+                                <img class='sprite' src='
+                                    ${sprite}
+                                '>
+                            </div>
+                            <h3 class='name'>${name}</h3>
+                        </div>
                     </div>
-                    <h3 class='name'>${name}</h3>
+                    <div class='types'>
+                        ${type_innerHTML}
+                    </div>
+                </div>
+                <div class='img-container'>
+                    <img src='${pokemon['sprites']['other']['official-artwork']['front_default']}'>
                 </div>
             </div>
-            <div class='types'>
-                ${type_innerHTML}
+            <div class='pokemon_card_back'>
+                ${stats_innerHTML}
             </div>
-        </div>
-
-        <div class='img-container'>
-            <img src='${pokemon['sprites']['other']['official-artwork']['front_default']}'>
         </div>
     `;
 
-        pokemon_card.innerHTML = pokemon_innerHTML;
+    pokemon_card.innerHTML = pokemon_innerHTML;
 
-        pokemon_container.appendChild(pokemon_card);
+    // Color the front and back with a gradient if more than one type is present
+    const pokemon_card_front = Array.from(Array.from(pokemon_card.children)[0].children)[0];
+    const pokemon_card_back = Array.from(Array.from(pokemon_card.children)[0].children)[1];
+    if (types.length > 1) {
+        pokemon_card_front.style = `background: -webkit-linear-gradient(
+            to right,
+            ${type_colors[types[0]]},
+            ${type_colors[types[1]]})`;
+        pokemon_card_back.style = `background: -webkit-linear-gradient(
+            to right,
+            ${type_colors[types[0]]},
+            ${type_colors[types[1]]})`;
+
+        pokemon_card_front.style = `background: linear-gradient(
+        to right,
+        ${type_colors[types[0]]},
+        ${type_colors[types[1]]})`;
+        pokemon_card_back.style = `background: linear-gradient(
+            to right,
+            ${type_colors[types[0]]},
+            ${type_colors[types[1]]})`;
+    } else {
+        pokemon_card_front.style = `background:${type_colors[types[0]]}`;
+        pokemon_card_back.style = `background:${type_colors[types[0]]}`;
+    }
+
+    pokemon_card.classList.add('move_card_up');
+    pokemon_container.appendChild(pokemon_card);
+
+    setTimeout(() => {
+        pokemon_card.style.animationPlayState = 'running';
+        pokemon_card.style.display = 'flex';
+        setTimeout(() => {
+            pokemon_card.classList.remove('move_card_up');
+        }, card_anim_speed);
+    }, number * 100);
+
+    number += 1;
 }
 
 // Clear the search bar from previous visits

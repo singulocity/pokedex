@@ -1,24 +1,64 @@
 .pokemon_card {
-    display: flex;
-    border-radius: 20px;
-    box-shadow: 0 3px 15px #111;
-    padding: 1em;
+    display: none;
     margin: 1em;
     width: 400px;
+    perspective: 1000px;
+    height: 120px;
 }
 
-.pokemon_card .info {
+.pokemon_card_front, .pokemon_card_back {
+    position: absolute;
+    border-radius: 20px;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.pokemon_card_back {
+    transform: rotateX(180deg);
+}
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin: 1em;
+}
+
+.stats .stat {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pokemon_card_inner {
+    border-radius: 20px;
+    box-shadow: 0 3px 15px #111;
+    width: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.pokemon_card:hover .pokemon_card_inner{
+    transform: rotateX(180deg);
+}
+
+.pokemon_card .info_front {
     display:flex;
     flex-direction: column;
     width: 100%;
 }
 
-.pokemon_card .info .types {
-    display: flex;
+.info {
     flex-grow: 1;
+    margin-left: 1em;
 }
 
-.pokemon_card .info .types .type {
+.types {
+    display: flex;
+}
+
+.types .type {
     flex-grow: 1;
     margin: 0 0.5em;
 
@@ -31,40 +71,51 @@
     text-align: center;
 }
 
-.pokemon_card .info .basic_info {
+.basic_info {
     display: flex;
     flex-grow: 1;
     align-items: flex-end;
     padding-bottom: 1em;
 }
 
-.pokemon_card .info .basic_info .sprite_and_name {
+.sprite_and_name {
     display: flex;
     flex-direction: row;
     flex-grow: 1;
 }
 
-.pokemon_card .info .basic_info .sprite_and_name .sprite_container img {
+.sprite_container img {
     margin-bottom: -0.2em;
 }
 
-.pokemon_card .info .basic_info .name {
-    font-size: 1em;
+.basic_info .name {
+    font-size: 1.25em;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
     margin: auto 0 0 0;
 }
 
-.pokemon_card .info .basic_info .number {
-    font-size: 0.75em;
+.basic_info .number {
+    font-size: 1em;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #00000099;
 }
 
 .pokemon_card .img-container {
-    width: 6em;
+    width: 5em;
     height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin-right: 1em;
+}
+
+.move_card_up {
+    animation: move_card_up_anim 1s ease-out;
+    animation-play-state: paused;
+}
+
+@keyframes move_card_up_anim {
+    0% {transform: translateY(100vh); opacity: 0;}
+    100% {transform: translateY(0); opacity: 1;}
 }

@@ -2,23 +2,34 @@ body {
     display: flex;
     flex-direction: column;
     background: #333;
+    margin: 0;
+}
+
+#pokedex_name {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 3em;
+    color: #ccc;
+    text-align: center;
+    margin-top: 1em;
 }
 
 #search_and_generation {
     display: flex;
     flex-direction: column;
+    margin-bottom: 2em;
 }
 
 #search_and_generation #generation_container {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: center;
 }
 
 #search_and_generation #generation_container .generation_button_container button {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1.5em;
     color: #999;
+    padding: 0 10px;
 
     background: none;
     border: none;
@@ -38,19 +49,19 @@ body {
 }
 
 @keyframes error_shake_anim {
-    0% {transform: translate(1px, 0px) rotate(0deg);}
-    20% {transform: translate(2px, 0px) rotate(0deg);}
-    40% {transform: translate(1px, 0px) rotate(0deg);}
-    60% {transform: translate(-1px, 0px) rotate(0deg);}
-    80% {transform: translate(-2px, 0px) rotate(0deg);}
-    100% {transform: translate(-1px, 0px) rotate(0deg);}
+    0% {transform: translate(1px, 0px);}
+    20% {transform: translate(2px, 0px);}
+    40% {transform: translate(1px, 0px);}
+    60% {transform: translate(-1px, 0px);}
+    80% {transform: translate(-2px, 0px);}
+    100% {transform: translate(-1px, 0px);}
 }
 
 #search_and_generation input[type=search] {
     outline: none;
     background-color: #ffffff00;
-    padding: .2em 1em;
-
+    margin: 1em 0;
+    
     border: none;
     border-bottom: 1px solid #000;
 
