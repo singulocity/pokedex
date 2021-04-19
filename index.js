@@ -10,8 +10,10 @@ let timeout = null;
 let generations = null;
 // Helps keep track of the current gen for the buttons
 let current_generation = 1;
-// Used for staggering the animation
+// Number is used for staggering the animation
 let number = 0;
+let promises = null;
+let anim_timeouts = [];
 
 const changeGeneration = async (url, new_generation, button_id) => {
     current_generation = new_generation;
@@ -51,9 +53,7 @@ const changeGeneration = async (url, new_generation, button_id) => {
 
             getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`, current_generation);
         }
-    } catch(e) {
-        errorShake(e);
-    }
+    } catch(e) {errorShake(e);}
 }
 const getGenerations = async (url) => {
     try {
@@ -79,9 +79,7 @@ const getGenerations = async (url) => {
                 generation_container.appendChild(generation_button);
             }
         }
-    } catch(e) {
-        errorShake(e);
-    }
+    } catch(e) {errorShake(e);}
 }
 
 // These are all the colors I use for the background of each pokemon card
@@ -126,12 +124,8 @@ const getAllPokemon = async (url, generation) => {
                     createPokemonCard(pokemon);
                 }
             });
-        } else {
-            errorShake(`No results found for ${id}...`);
-        }
-    } catch(e) {
-        errorShake(e);
-    }
+        } else {errorShake(`No results found for ${id}...`);}
+    } catch(e) {errorShake(e);}
 }
 
 // Uses the pokeAPI to get a Pokemon
@@ -144,14 +138,8 @@ getPokemon = async (id) => {
         if (result.ok) {
             const pokemon = await result.json();
             return Promise.resolve(pokemon);
-        } else {
-            errorShake(`No results found for ${id}...`);
-            return Promise.error();
-        }
-    } catch(e) {
-        errorShake(e);
-        return Promise.error();
-    }
+        } else {errorShake(`No results found for ${id}...`);}
+    } catch(e) {errorShake(e);}
 }
 
 // Shake the search bar when the search fails and show error message
@@ -169,19 +157,82 @@ function errorShake(error_text) {
 const searchPokemon = async () => {
     clearTimeout(timeout);
 
-    pokemon_container.innerHTML = '';
     search_error.textContent = '';
 
     timeout = setTimeout(function() {
         const search_value = search_bar.value.toLowerCase();
+        const pokemon_cards = Array.from(pokemon_container.children);
+        let search_results = [];
+
         if (search_value != '') {
-            getPokemon(search_value).then((pokemon) => {
-                createPokemonCard(pokemon);
+            for (let index = 0; index < promises.length; index++) {
+                // First search for names
+                if (promises[index].name.search(search_value) != -1) {
+                    search_results.push(index);
+                }
+
+                // Then search for types
+                for (let type_index = 0; type_index < promises[index].types.length; type_index++)
+                    if (promises[index].types[type_index].type.name.search(search_value) != -1) {
+                        search_results.push(index);
+                    }
+            }
+
+            // Clear the animation timeouts
+            anim_timeouts.forEach(anim_timeout => {
+                clearTimeout(anim_timeout);
             });
+
+            // Next hide the cards
+            for (let index = 0; index < pokemon_cards.length; index++) {
+                if (pokemon_cards[index].classList.contains('move_card_up')) {
+                    pokemon_cards[index].classList.remove('move_card_up');
+                    pokemon_cards[index].style.animationPlayState = 'paused';
+                }
+                pokemon_cards[index].style.display = 'none';
+            }     
+
+            anim_timeouts = [];
+            number = 0;
+
+            // Then show the few results
+            search_results.forEach(index => {
+                addMoveUpAnim(pokemon_cards[index]);
+            });
+        // If search bar is cleared, then show all pokemon in current gen
         } else {
-            getAllPokemon(`https://pokeapi.co/api/v2/pokemon/?limit=${limit}&offset=${offset}`);
+            // Clear the animation timeouts
+            anim_timeouts.forEach(anim_timeout => {
+                clearTimeout(anim_timeout);
+            });
+
+            anim_timeouts = [];
+            number = 0;
+
+            pokemon_cards.forEach(pokemon_card => {
+                addMoveUpAnim(pokemon_card);
+            });
         }
-    }, card_anim_speed);
+    }, 1000);
+}
+
+function addMoveUpAnim(pokemon_card) {
+    pokemon_card.style.display = 'flex';
+                    
+    pokemon_card.classList.add('move_card_up');
+
+    // Add the animation to the cards
+    let anim_timeout = setTimeout(() => {
+        pokemon_card.style.animationPlayState = 'running';
+        pokemon_card.style.display = 'flex';
+        setTimeout(() => {
+            pokemon_card.classList.remove('move_card_up');
+            pokemon_card.style.animationPlayState = 'paused';
+        }, card_anim_speed);
+    }, number * 100);
+
+    anim_timeouts.push(anim_timeout);
+    number += 1;
 }
 
 function createPokemonCard(pokemon) {
@@ -217,31 +268,65 @@ function createPokemonCard(pokemon) {
         sprite = `images/unknown.png`;
     }
 
+    // Calculate the total stats of the pokemon
+    let total_stats = 0;
+    pokemon['stats'].forEach(stat => {
+        total_stats += stat.base_stat;
+    });
+
     let stats_innerHTML = `
-    <div class='stats'>
-        <span class='stat'>
-            HP: ${pokemon['stats'][0].base_stat}
-        </span>
-        <span class='stat'>
-            ATK: ${pokemon['stats'][1].base_stat}
-        </span>
-        <span class='stat'>
-            DEF: ${pokemon['stats'][2].base_stat}
-        </span>
-        <span class='stat'>
-            SP. ATK: ${pokemon['stats'][3].base_stat}
-        </span>
-        <span class='stat'>
-            SP. DEF: ${pokemon['stats'][4].base_stat}
-        </span>
-        <span class='stat'>
-            SPEED: ${pokemon['stats'][5].base_stat}
-        </span>
-    </div>
+    <table class='stats'>
+        <tr>
+            <th>
+                <div class='stat_box hp'></div>
+                HP
+            </th>
+            <th>${pokemon['stats'][0].base_stat}</th>
+            <th>
+                <div class='stat_box sp_atk'></div>
+                SP. ATK
+            </th>
+            <th>${pokemon['stats'][3].base_stat}</th>
+        </tr>
+        <tr>
+            <th>
+                <div class='stat_box atk'></div>
+                ATK
+            </th>
+            <th>${pokemon['stats'][1].base_stat}</th>
+            <th>
+                <div class='stat_box sp_def'></div>
+                SP. DEF
+            </th>
+            <th>${pokemon['stats'][4].base_stat}</th>
+        </tr>
+        <tr>
+            <th>
+                <div class='stat_box def'></div>
+                DEF
+            </th>
+            <th>${pokemon['stats'][2].base_stat}</th>
+            <th>
+                <div class='stat_box speed'></div>
+                SPEED
+            </th>
+            <th>${pokemon['stats'][5].base_stat}</th>
+        </tr>
+        <tr>
+            <th class='total'>TOTAL</th>
+            <th>${total_stats}</th>
+            <th></th>
+            <th>
+                <a class='bulb_link' href='https://bulbapedia.bulbagarden.net/wiki/${name}_(Pokémon)' target='_blank'>
+                    <img src='images/bulbapedia.png'>
+                </a>
+            </th>
+        </tr>
+    </table>
     `;
 
     const pokemon_innerHTML = `
-        <div class='pokemon_card_inner'>
+        <div class='pokemon_card_inner' onclick='flipCard(this)'>
             <div class='pokemon_card_front'>
                 <div class='info'>
                     <div class='basic_info'>
@@ -296,19 +381,20 @@ function createPokemonCard(pokemon) {
         pokemon_card_front.style = `background:${type_colors[types[0]]}`;
         pokemon_card_back.style = `background:${type_colors[types[0]]}`;
     }
-
-    pokemon_card.classList.add('move_card_up');
     pokemon_container.appendChild(pokemon_card);
 
-    setTimeout(() => {
-        pokemon_card.style.animationPlayState = 'running';
-        pokemon_card.style.display = 'flex';
-        setTimeout(() => {
-            pokemon_card.classList.remove('move_card_up');
-        }, card_anim_speed);
-    }, number * 100);
+    addMoveUpAnim(pokemon_card);
+}
 
-    number += 1;
+function flipCard(card) {
+    // Check if on mobile first
+    if(/Android|webOS|iPhone|iPad|Mac|Macintosh|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        if (card.style.transform == 'rotateX(180deg)') {
+            card.style.transform = '';
+        } else {
+            card.style.transform = 'rotateX(180deg)';
+        }
+    }
 }
 
 // Clear the search bar from previous visits
