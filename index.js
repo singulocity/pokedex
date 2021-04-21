@@ -3,6 +3,8 @@ const search_bar = document.getElementById('search_bar');
 const search_error = document.getElementById('search_error');
 const generation_container = document.getElementById('generation_container');
 const pokedex_name = document.getElementById('pokedex_name');
+const loading = document.getElementById('loading');
+
 // In milliseconds
 const card_anim_speed = 1000;
 
@@ -106,6 +108,9 @@ const type_colors = {
 
 // Uses the pokeAPI to get a limited amount within an offset
 const getAllPokemon = async (url, generation) => {
+    // Show the loading Pikachu
+    loading.style.display = 'block';
+
     try {
         const result = await fetch(url);
 
@@ -118,7 +123,7 @@ const getAllPokemon = async (url, generation) => {
             promises = await Promise.all(all_pokemon);
 
             number = 0;
-
+            
             promises.forEach(pokemon => {
                 if (current_generation == generation) {
                     createPokemonCard(pokemon);
@@ -126,6 +131,9 @@ const getAllPokemon = async (url, generation) => {
             });
         } else {errorShake(`No results found for ${id}...`);}
     } catch(e) {errorShake(e);}
+
+    // Hide the loading Pikachu
+    loading.style.display = 'none';
 }
 
 // Uses the pokeAPI to get a Pokemon
@@ -355,7 +363,7 @@ function createPokemonCard(pokemon) {
     `;
 
     pokemon_card.innerHTML = pokemon_innerHTML;
-
+    
     // Color the front and back with a gradient if more than one type is present
     const pokemon_card_front = Array.from(Array.from(pokemon_card.children)[0].children)[0];
     const pokemon_card_back = Array.from(Array.from(pokemon_card.children)[0].children)[1];

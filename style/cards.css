@@ -19,7 +19,7 @@
 .pokemon_card_back {transform: rotateX(180deg);}
 
 .stats {
-    margin: .5em 1em;
+    margin: 0.5em 2.5%;
     border-collapse: collapse;
     display: table;
     width: 100%;
