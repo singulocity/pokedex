@@ -1,0 +1,9 @@
+<mat-card>
+    <mat-card-header>
+        <mat-card-title-group>
+            <mat-card-subtitle>#{{pokemon?.id}}</mat-card-subtitle>
+            <mat-card-title>{{pokemon?.name | titlecase}}</mat-card-title>
+            <img mat-card-sm-image src="{{pokemon?.sprites?.front_default}}">
+        </mat-card-title-group>
+    </mat-card-header>
+</mat-card>
