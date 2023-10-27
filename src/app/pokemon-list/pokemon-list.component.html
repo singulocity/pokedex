@@ -1,6 +1,7 @@
 <mat-list>
     <mat-list-item *ngFor="let p of pokemon">
-        <!--<app-pokemon-card [pokemonToGet]="pokemon"></app-pokemon-card>-->
+        <span matListItemLine>#{{p.id}}</span>
+        <span matListItemTitle>{{p.name | titlecase}}</span>
         <img matListItemIcon src="{{p.sprites.front_default}}">
     </mat-list-item>
 </mat-list>
