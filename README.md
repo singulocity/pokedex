@@ -2,13 +2,12 @@
 Easily find information about Pokémon.
 
 ## Features
-- Filter by geneartion. New generations are automatically included via PokeAPI
-- Search by name or type within the generation
-- Use mouse to hover over the pokemon card to see the base stats for the Pokémon
+- Filter by generation. New generations are automatically included via PokeAPI
+- Search by name or type within the generation, get an error if nothing found
+- Use mouse to click the pokemon card to see the base stats for the Pokémon
 - Each card has a Bulbapedia entry in the bottom-right corner for further information
 
 ## Credits
-
 Icon: https://iconarchive.com/show/dumper-icons-by-draseart/PokeBall-icon.html
 
 Question mark spite: https://bulbapedia.bulbagarden.net/wiki/Ten_question_marks
