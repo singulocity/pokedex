@@ -334,7 +334,7 @@ function createPokemonCard(pokemon) {
     `;
 
     const pokemon_innerHTML = `
-        <div class='pokemon_card_inner' ontouchstart='flipCard(this)'>
+        <div class='pokemon_card_inner' onclick='flipCard(this)'>
             <div class='pokemon_card_front'>
                 <div class='info'>
                     <div class='basic_info'>
