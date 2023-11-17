@@ -395,13 +395,10 @@ function createPokemonCard(pokemon) {
 }
 
 function flipCard(card) {
-    // Check if on mobile first
-    if(/Android|webOS|iPhone|iPad|Mac|Macintosh|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        if (card.style.transform == 'rotateX(180deg)') {
-            card.style.transform = '';
-        } else {
-            card.style.transform = 'rotateX(180deg)';
-        }
+    if (card.style.transform == 'rotateX(180deg)') {
+        card.style.transform = '';
+    } else {
+        card.style.transform = 'rotateX(180deg)';
     }
 }
 
